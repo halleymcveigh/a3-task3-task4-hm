@@ -1,0 +1,92 @@
+---
+title: "Naples Reef (January 2010) purple urchins"
+author: "Halley McVeigh"
+date: "11/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(here)
+```
+
+```{r}
+urchins <- read_csv(here("data", "urchins.csv")) %>% 
+  clean_names()
+```
+
+```{r}
+naples <- urchins %>%
+  filter(common_name == "Purple Urchin") %>% 
+  filter(site == "NAPL") %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(year = year(date)) %>% 
+  mutate(month = month(date)) %>% 
+  filter(year == 2010) %>% 
+  filter(month == 1)
+  
+```
+
+### Exploratory histogram
+```{r}
+ggplot(data = naples) +
+  geom_histogram(aes(x = size, fill = treatment), breaks = seq(2,6,.5), alpha = .75) +
+  facet_wrap(~treatment) +
+  labs(x = "Size (cm)", y = "Count") + # rename axes
+  theme(legend.position = "none") + # remove legend
+  scale_fill_manual(values = c("purple", "darkgreen")) # fill colors
+```
+Somewhat normally distributed
+
+
+### A quantile-quantile plot to explore normality
+```{r}
+ggplot(data = naples) +
+  geom_qq(aes(sample = size)) +
+  facet_wrap(~treatment) # separate qq plot by treatment
+```
+The closer it is to linear, the closer the sample is normally distributed. They both generally follow a linear trend.
+
+
+### Descriptive statistics
+```{r}
+naples_summary <- naples %>% 
+  group_by(treatment) %>% 
+  summarize(mean_size = mean(size, na.rm = TRUE),
+            median_size = median(size, na.rm = TRUE),
+            sd_size = sd(size, na.rm = TRUE),
+            n = n())
+
+naples_summary
+```
+The sample sizes are over 60, well over 30, the sampling distribution of means will be normal. A t-test is therefore appropriate to compare the means of sizes between treatments of purple urchins observed at the Naples site. 
+
+### Running a two sample t-test 
+Create vectors containing observations for each treatment sample using `filter()` and `pull()` to extract the size column as a vector
+
+```{r}
+annual_sample <- naples %>% 
+  filter(treatment == "ANNUAL") %>% 
+  pull(size) # pull size column in annual treatment as a vector
+
+control_sample <- naples %>% 
+  filter(treatment == "CONTROL") %>% 
+  pull(size) # pull size column in control treatment as a vector
+
+t.test(annual_sample, control_sample)
+```
+
+The mean of annual treatment is 3.92 and the mean of the control treatment is 3.73. The null hypothesis that is tested in this two sample t-test is that the means of the two samples are equal, or that the difference in means is equal to zero. In this test there is a 25% chance that samples could have been randomly drawn with means at least as different, if they were taken from populations with the same mean. If 
+The explanation for this is that these samples could have been taken from a sa
+
+
+
+
+
+
+
+

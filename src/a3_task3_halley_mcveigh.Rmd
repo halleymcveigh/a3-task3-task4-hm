@@ -1,0 +1,113 @@
+---
+title: "Santa Barbara urchins"
+author: "Halley McVeigh"
+date: "11/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(janitor)
+library(here)
+library(kableExtra)
+library(lubridate)
+
+```
+
+### Read in Santa Barbara urchins data
+
+```{r}
+urchins <- read_csv(here("data", "urchins.csv")) %>% 
+  clean_names()
+```
+
+## Section 1. Creating exploratory data visualizations
+
+### Data visualization: Faceted histogram 
+
+```{r}
+ggplot(data = urchins) +
+  geom_histogram(aes(x = size, fill = common_name), alpha = 0.75, binwidth = .5, color = "gray") +
+  facet_wrap(~common_name) + # separate histogram plots for each common name
+  labs(x = "Size (cm)", y = "Count") + # rename axes
+  theme(legend.position = "none") + # remove legend
+  scale_fill_manual(values = c("purple", "red")) # fill color for urchin color
+```
+
+
+### Data visualization: Boxplot
+```{r}
+ggplot(data = urchins) +
+  geom_boxplot(aes(x = common_name, y = size)) +
+  labs(x = "Common name", y = "Size (cm)")
+```
+
+## Descriptive statistics table
+A summary table to include **mean, median, standard deviation, and sample size** for purple and red urchin data.
+
+```{r}
+urchins_summary <- urchins %>% 
+  group_by(common_name) %>% 
+  summarize(mean_size = mean(size, na.rm = T), # calculate mean, median, sd, n
+            median_size = median(size, na.rm = T),
+            standard_deviation = sd(size, na.rm = T),
+            sample_size = n())
+
+kbl(urchins_summary, caption = "Urchin Summary Table", # create summary table
+    col.names = c("Common name", # rename column names
+                  "Mean size (cm)",
+                  "Median size (cm)",
+                  "Standard deviation",
+                  "Sample size")) %>% 
+  kable_styling(full_width = FALSE, "bordered")
+```
+
+
+The distribution of the red urchin is...
+
+
+
+## Section 2. Exploring purple urchin counts by site and year
+
+```{r}
+purple_urchins <- urchins %>%
+  filter(common_name == "Purple Urchin") %>% # include only purple urchins
+  mutate(date = mdy(date)) %>% # convert the date to class "Date"
+           mutate(year = year(date)) %>% # creating a column with year
+  mutate(site_full = case_when( # creating a new column with full names of sites
+    site %in% c("NAPL") ~ "Naples Reef",
+    site %in% c("AQUE") ~ "Arroyo Quemado Reef",
+    site %in% c("IVEE") ~ "Isla Vista Reek",
+    site %in% c("CARP") ~ "Carpinteria Reef",
+    site %in% c("MOHK") ~ "Mohawk Reef"))
+  
+```
+
+
+A summary table containing the **total number of purple urchins observed by site and year**
+
+```{r}
+purple_urchins_summary <- purple_urchins %>% 
+  select("year", "site_full") %>% 
+  filter(!is.na(year)) %>% # filter out all rows where year is na
+  count(site_full, year) # count() combines group_by and summarize
+
+kbl(purple_urchins_summary, caption = "Purple urchin count by site and year", # create a summary table
+    col.names = c("Site", "Year", "Number observed")) %>% 
+  kable_styling(full_width = TRUE, "bordered")
+```
+
+An exploratory graph of counts of purple urchins recorded at each site for the years included in the study
+
+```{r}
+ggplot(data = purple_urchins_summary) + 
+  geom_col(aes(x = year, y = n, fill = site_full),
+           color = "black", alpha = .75, bins = 30) + # fill each site different color, outline in black
+  facet_wrap(~site_full) + # create different bar graphs for each site
+  scale_x_continuous(breaks = seq(2000, 2012, by = 4)) + # years on x axis labeled every 4 years
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Count observed", title = "Purple urchins of Santa Barbara")
+```
+
