@@ -16,6 +16,11 @@ library(lubridate)
 
 ```
 
+## This doocument is an exploration and analysis of red and purple urchins recorded by Santa Barbara Coastal Long Term Ecological Research program divers.
+
+The data is from "Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative." It can be found [here](https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b). The urchins were observed at 5 sites along the Santa Barbara coast.
+
+
 ### Read in Santa Barbara urchins data
 
 ```{r}
@@ -23,13 +28,14 @@ urchins <- read_csv(here("data", "urchins.csv")) %>%
   clean_names()
 ```
 
-## Section 1. Creating exploratory data visualizations
+## Section 1. Creating exploratory data visualizations of size comparisons between red and purple urchins
 
 ### Data visualization: Faceted histogram 
+Comparing the distribution of sizes between red and purple urchins
 
 ```{r}
 ggplot(data = urchins) +
-  geom_histogram(aes(x = size, fill = common_name), alpha = 0.75, binwidth = .5, color = "gray") +
+  geom_histogram(aes(x = size, fill = common_name), alpha = 0.75, bins = 14, color = "gray") +
   facet_wrap(~common_name) + # separate histogram plots for each common name
   labs(x = "Size (cm)", y = "Count") + # rename axes
   theme(legend.position = "none") + # remove legend
@@ -41,10 +47,10 @@ ggplot(data = urchins) +
 ```{r}
 ggplot(data = urchins) +
   geom_boxplot(aes(x = common_name, y = size)) +
-  labs(x = "Common name", y = "Size (cm)")
+  labs(x = "Common name", y = "Size (cm)") # update axis labels
 ```
 
-## Descriptive statistics table
+### Descriptive statistics table
 A summary table to include **mean, median, standard deviation, and sample size** for purple and red urchin data.
 
 ```{r}
@@ -63,14 +69,19 @@ kbl(urchins_summary, caption = "Urchin Summary Table", # create summary table
                   "Sample size")) %>% 
   kable_styling(full_width = FALSE, "bordered")
 ```
+### Overall takeaways on sizes between the two urchin species
 
-
-The distribution of the red urchin is...
+ * The distribution of the red urchin is mostly normal and symmetric with measures of central tendency for the size data of 6.78 for the mean and 7.0 for the median. 
+ * The purple urchin distribution is positively skewed and more leptokurtic based on the exploratory plots. 
+  * Overall, the red urchin sample has a larger size than the purple urchin. 
+ * The plots suggest that the red urchin data is more widely dispersed. This is also observed in the summary table with standard deviation values.  The purple urchin sample has a smaller standard deviation (1.18) and therefore has a narrower data spread with more values closer to the mean. The red urchin sample has a standard deviation closer to 2 and displays a wider, or squattier distribution.
+ * The mean size of the red urchins is 2.31cm greater than that of the purple urchin and there is a 41.02% difference of means.
 
 
 
 ## Section 2. Exploring purple urchin counts by site and year
 
+Creating a subset for purple urchins for exploration, visualization, and analysis
 ```{r}
 purple_urchins <- urchins %>%
   filter(common_name == "Purple Urchin") %>% # include only purple urchins
@@ -86,7 +97,7 @@ purple_urchins <- urchins %>%
 ```
 
 
-A summary table containing the **total number of purple urchins observed by site and year**
+### A summary table containing the **total number of purple urchins observed by site and year**
 
 ```{r}
 purple_urchins_summary <- purple_urchins %>% 
@@ -99,14 +110,14 @@ kbl(purple_urchins_summary, caption = "Purple urchin count by site and year", # 
   kable_styling(full_width = TRUE, "bordered")
 ```
 
-An exploratory graph of counts of purple urchins recorded at each site for the years included in the study
+### An exploratory graph of counts of purple urchins recorded at each site for the years included in the study (2008-2020)
 
 ```{r}
 ggplot(data = purple_urchins_summary) + 
   geom_col(aes(x = year, y = n, fill = site_full),
            color = "black", alpha = .75, bins = 30) + # fill each site different color, outline in black
   facet_wrap(~site_full) + # create different bar graphs for each site
-  scale_x_continuous(breaks = seq(2000, 2012, by = 4)) + # years on x axis labeled every 4 years
+  scale_x_continuous(breaks = seq(2008, 2020, by = 4)) + # years on x axis labeled every 4 years
   theme(legend.position = "none") +
   labs(x = "Year", y = "Count observed", title = "Purple urchins of Santa Barbara")
 ```
