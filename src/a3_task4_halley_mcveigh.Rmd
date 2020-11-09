@@ -12,35 +12,45 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(here)
+library(kableExtra)
 ```
 
+## In this document I will be using the purple urchins data recorded by Santa Barbara Coastal Long Term Ecological Research program divers.
+
+The data is from "Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative." It can be found [here](https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b). The urchins were observed at 5 sites along the Santa Barbara coast. There are two treatments included in these data - purple urchins in the **control** treatment experienced no giant kelp removal and purple urchins in the **annual** treatment experienced annual kelp removal.
+
+
+### Read in Santa Barbara urchins data
 ```{r}
 urchins <- read_csv(here("data", "urchins.csv")) %>% 
   clean_names()
 ```
 
+### Create a subset of "urchins" that only contains observations from the Naples site in January of 2010
+
 ```{r}
 naples <- urchins %>%
-  filter(common_name == "Purple Urchin") %>% 
-  filter(site == "NAPL") %>% 
-  mutate(date = mdy(date)) %>% 
-  mutate(year = year(date)) %>% 
-  mutate(month = month(date)) %>% 
-  filter(year == 2010) %>% 
-  filter(month == 1)
+  filter(common_name == "Purple Urchin") %>% # filter to only include purple urchins
+  filter(site == "NAPL") %>% # filter to only include urchins of Naples
+  mutate(date = mdy(date)) %>% # change to Date format
+  mutate(year = year(date)) %>% # create a column for year
+  mutate(month = month(date)) %>% # create a column for month
+  filter(year == 2010) %>% # filter to only include 2010
+  filter(month == 1) # filter to only include observations from January
   
 ```
 
 ### Exploratory histogram
+Create an exploratory plot to look at size distribution of the treatments (Control and Annual) to assess normality
+
 ```{r}
 ggplot(data = naples) +
-  geom_histogram(aes(x = size, fill = treatment), breaks = seq(2,6,.5), alpha = .75) +
+  geom_histogram(aes(x = size, fill = treatment), breaks = seq(2,6,.5), alpha = .6) +
   facet_wrap(~treatment) +
   labs(x = "Size (cm)", y = "Count") + # rename axes
   theme(legend.position = "none") + # remove legend
   scale_fill_manual(values = c("purple", "darkgreen")) # fill colors
 ```
-Somewhat normally distributed
 
 
 ### A quantile-quantile plot to explore normality
@@ -49,10 +59,14 @@ ggplot(data = naples) +
   geom_qq(aes(sample = size)) +
   facet_wrap(~treatment) # separate qq plot by treatment
 ```
-The closer it is to linear, the closer the sample is normally distributed. They both generally follow a linear trend.
 
+### Overall takeaways on size distribution between the two treaments
+ * Based on the exploratory histogram plots the two treatments are somewhat positively skewed with the control treatment displaying a slight leptokurtic kurtosis and the annual is more evenly distributed, although neither has a heavy tail or extreme ends. Both facet plots are slightly combed in distribution which reflects the data set and rounding that may have been applied to the sizes.
+ * Based on the quantile-quantile plots it appears that the two treatments have relatively normal sample distribution. The closer the qq-plot is to a linear trend, the closer the sample is to being normally distributed. 
 
-### Descriptive statistics
+### Descriptive statistics table
+Create a summary table including the mean, median, standard deviation, and sample size for size distribution data of the Naples subset 
+
 ```{r}
 naples_summary <- naples %>% 
   group_by(treatment) %>% 
@@ -61,9 +75,15 @@ naples_summary <- naples %>%
             sd_size = sd(size, na.rm = TRUE),
             n = n())
 
-naples_summary
+kbl(naples_summary, caption = "Naples Purple Urchin Summary Table", # create summary table
+    col.names = c("Treatment", # rename column names
+                  "Mean size (cm)",
+                  "Median size (cm)",
+                  "Standard deviation",
+                  "Sample size")) %>% 
+  kable_styling(full_width = FALSE, "bordered")
 ```
-The sample sizes are over 60, well over 30, the sampling distribution of means will be normal. A t-test is therefore appropriate to compare the means of sizes between treatments of purple urchins observed at the Naples site. 
+The sample sizes are over 60, well over 30, indicating that based on the central limit theorem the sampling distribution of means will be normal even if the samples were not normally distributed when examined before. A t-test may therefore be appropriate to compare the means of sizes between treatments of purple urchins observed at the Naples site. 
 
 ### Running a two sample t-test 
 Create vectors containing observations for each treatment sample using `filter()` and `pull()` to extract the size column as a vector
@@ -80,10 +100,10 @@ control_sample <- naples %>%
 t.test(annual_sample, control_sample)
 ```
 
-The mean of annual treatment is 3.92 and the mean of the control treatment is 3.73. The null hypothesis that is tested in this two sample t-test is that the means of the two samples are equal, or that the difference in means is equal to zero. In this test there is a 25% chance that samples could have been randomly drawn with means at least as different, if they were taken from populations with the same mean. If 
-The explanation for this is that these samples could have been taken from a sa
-
-
+ * The mean of the annual treatment population is 3.92 and is only 0.19 greater than the mean of the control treatment which is 3.73. The means of the two treatment populations have a 4.9% difference. Both treatment populations have relatively narrow data ranges with standard deviations of under 1.
+ * The null hypothesis that is tested in this two sample t-test is that the means of the two samples (annual and control treatments) are equal, or that the difference in means is equal to zero. 
+ * In this test the p-value is 0.2536, signifying that there is a 25% chance that samples could have been randomly drawn with means at least as different from the means in this population if they were taken from populations with the same mean.
+ * It is pretty likely (1 in 4 chance) that by randomly selecting two samples from a population with the same mean, they would have a means difference of at least a 4.9%.
 
 
 
