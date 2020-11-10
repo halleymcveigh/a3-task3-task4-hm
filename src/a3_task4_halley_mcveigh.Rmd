@@ -17,7 +17,9 @@ library(kableExtra)
 
 ## In this document I will be using the purple urchins data recorded by Santa Barbara Coastal Long Term Ecological Research program divers.
 
-The data is from "Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative." It can be found [here](https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b). The urchins were observed at 5 sites along the Santa Barbara coast. There are two treatments included in these data - purple urchins in the **control** treatment experienced no giant kelp removal and purple urchins in the **annual** treatment experienced annual kelp removal.
+The data is from "Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative." It can be found [here](https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b). 
+
+The urchins were observed at 5 sites along the Santa Barbara coast. There are two treatments included in these data - purple urchins in the **control** treatment experienced no giant kelp removal and purple urchins in the **annual** treatment experienced annual kelp removal.
 
 
 ### Read in Santa Barbara urchins data
@@ -57,12 +59,16 @@ ggplot(data = naples) +
 ```{r}
 ggplot(data = naples) +
   geom_qq(aes(sample = size)) +
-  facet_wrap(~treatment) # separate qq plot by treatment
+  facet_wrap(~treatment) + # separate qq plot by treatment
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles", 
+       title= "Size Differences Between Treatment Types in Purple Urchin")
+
 ```
 
 ### Overall takeaways on size distribution between the two treaments
- * Based on the exploratory histogram plots the two treatments are somewhat positively skewed with the control treatment displaying a slight leptokurtic kurtosis and the annual is more evenly distributed, although neither has a heavy tail or extreme ends. Both facet plots are slightly combed in distribution which reflects the data set and rounding that may have been applied to the sizes.
- * Based on the quantile-quantile plots it appears that the two treatments have relatively normal sample distribution. The closer the qq-plot is to a linear trend, the closer the sample is to being normally distributed. 
+ * Based on the exploratory histogram plots the two treatments are fairly normal in distribution. They are somewhat positively skewed with the control treatment displaying a slight leptokurtic kurtosis and the annual is more evenly distributed, although neither has a heavy tail or extreme ends. Both facet plots are slightly combed in distribution which reflects the data set and rounding that may have been applied to the sizes. Overall the data is fairly dispersed across the range of sizes.
+ * Based on the quantile-quantile plots it appears that the two treatments have relatively normal sample distribution. The closer the qq-plot is to a linear trend, the closer the sample is to being normally distributed. A quantile quantile plot include sample quantities on the y axis and theoretial quantiles on the x axis. Neither of these qq-plots is very "s" shaped and therefore do not indicate skewedness in the data.
 
 ### Descriptive statistics table
 Create a summary table including the mean, median, standard deviation, and sample size for size distribution data of the Naples subset 
@@ -85,6 +91,20 @@ kbl(naples_summary, caption = "Naples Purple Urchin Summary Table", # create sum
 ```
 The sample sizes are over 60, well over 30, indicating that based on the central limit theorem the sampling distribution of means will be normal even if the samples were not normally distributed when examined before. A t-test may therefore be appropriate to compare the means of sizes between treatments of purple urchins observed at the Naples site. 
 
+
+### Calculating the percent difference of means
+Create a function for percent difference and actual difference
+```{r}
+
+pct_dif <- function(a,b){(b-a)/((a+b)/2)}
+actual_dif<-function(a,b){b-a}
+
+pct_dif(a = 3.916667, b = 3.725807)
+actual_dif(a = 3.916667, b = 3.725807)
+
+```
+
+
 ### Running a two sample t-test 
 Create vectors containing observations for each treatment sample using `filter()` and `pull()` to extract the size column as a vector
 
@@ -100,12 +120,15 @@ control_sample <- naples %>%
 t.test(annual_sample, control_sample)
 ```
 
- * The mean of the annual treatment population is 3.92 and is only 0.19 greater than the mean of the control treatment which is 3.73. The means of the two treatment populations have a 4.9% difference. Both treatment populations have relatively narrow data ranges with standard deviations of under 1.
+ * The mean of the annual treatment population is 3.92 and is only 0.19cm greater than the mean of the control treatment which is 3.73. The means of the two treatment populations have a 4.99% difference. These values are calculated in the function above. Both treatment populations have relatively narrow data ranges with standard deviations of under 1.
  * The null hypothesis that is tested in this two sample t-test is that the means of the two samples (annual and control treatments) are equal, or that the difference in means is equal to zero. 
  * In this test the p-value is 0.2536, signifying that there is a 25% chance that samples could have been randomly drawn with means at least as different from the means in this population if they were taken from populations with the same mean.
- * It is pretty likely (1 in 4 chance) that by randomly selecting two samples from a population with the same mean, they would have a means difference of at least a 4.9%.
+ * If using a p-value of 0.05 as a reference point of statistical significance the results of this two sample t-test conveys that it is not statistically significant, and we likely cannot reject the null hypothesis.
+ * It is pretty likely (1 in 4 chance) that by randomly selecting two samples from populations with the same mean, they would have a difference of means of at least 4.9%.
 
 
+
+ * In this test the p-value is 0.2536, signifying the probability that samples could have been randomly drawn with means at least as different from the means in this population if they were taken from populations with the same mean.
 
 
 
