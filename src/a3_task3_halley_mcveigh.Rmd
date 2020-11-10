@@ -16,10 +16,11 @@ library(lubridate)
 
 ```
 
-## This doocument is an exploration and analysis of red and purple urchins recorded by Santa Barbara Coastal Long Term Ecological Research program divers.
+## This document is an exploration and analysis of red and purple urchins recorded by Santa Barbara Coastal Long Term Ecological Research program divers.
 
 The data is from "Reed, D. 2020. SBC LTER: Reef: Long-term experiment: Kelp removal: Urchin size frequency distribution ver 20. Environmental Data Initiative." It can be found [here](https://doi.org/10.6073/pasta/5a1e9ef03aa47bd2225c0bb98a02a63b). The urchins were observed at 5 sites along the Santa Barbara coast.
 
+In Tasks 3 and 4 I will be exploring size differences of the two species of urchins (red and purple) as well as diving deeper into the purple urchins population with respect to specific years and site locations. 
 
 ### Read in Santa Barbara urchins data
 
@@ -37,17 +38,18 @@ Comparing the distribution of sizes between red and purple urchins
 ggplot(data = urchins) +
   geom_histogram(aes(x = size, fill = common_name), alpha = 0.75, bins = 14, color = "gray") +
   facet_wrap(~common_name) + # separate histogram plots for each common name
-  labs(x = "Size (cm)", y = "Count") + # rename axes
+  labs(x = "Size (cm)", y = "Count", title = "Histogram of Santa Barbara urchin size") + # rename axes
   theme(legend.position = "none") + # remove legend
   scale_fill_manual(values = c("purple", "red")) # fill color for urchin color
 ```
 
 
 ### Data visualization: Boxplot
+
 ```{r}
 ggplot(data = urchins) +
   geom_boxplot(aes(x = common_name, y = size)) +
-  labs(x = "Common name", y = "Size (cm)") # update axis labels
+  labs(x = "Common name", y = "Size (cm)", title = "Boxplot of Santa Barbara urchin size") # update axis labels
 ```
 
 ### Descriptive statistics table
@@ -69,13 +71,27 @@ kbl(urchins_summary, caption = "Urchin Summary Table", # create summary table
                   "Sample size")) %>% 
   kable_styling(full_width = FALSE, "bordered")
 ```
+
+### Calculating the percent difference of means
+Create a function for percent difference and actual difference
+```{r}
+
+pct_dif <- function(a,b){(b-a)/((a+b)/2)}
+actual_dif<-function(a,b){b-a}
+
+pct_dif(a = 4.469797, b = 6.776489)
+actual_dif(a = 4.469797, b = 6.776489)
+
+```
+
 ### Overall takeaways on sizes between the two urchin species
 
  * The distribution of the red urchin is mostly normal and symmetric with measures of central tendency for the size data of 6.78 for the mean and 7.0 for the median. 
- * The purple urchin distribution is positively skewed and more leptokurtic based on the exploratory plots. 
-  * Overall, the red urchin sample has a larger size than the purple urchin. 
- * The plots suggest that the red urchin data is more widely dispersed. This is also observed in the summary table with standard deviation values.  The purple urchin sample has a smaller standard deviation (1.18) and therefore has a narrower data spread with more values closer to the mean. The red urchin sample has a standard deviation closer to 2 and displays a wider, or squattier distribution.
- * The mean size of the red urchins is 2.31cm greater than that of the purple urchin and there is a 41.02% difference of means.
+ * The purple urchin distribution is slightly positively skewed and more leptokurtic based on the exploratory plots. 
+  * Overall, the red urchin sample has a larger mean size than the purple urchin, 6.78cm vs. 4.47cm respectively. 
+   * The mean size of the red urchins is 2.31cm greater than that of the purple urchin (actual mean difference) and there is a 41.02% difference of means. Both of these values are calculated above.
+ * The histogram plots and boxplots suggest that the red urchin data is more widely dispersed than that of the purple urchin. This is also observed in the summary table with standard deviation values.  The purple urchin sample has a smaller standard deviation (1.18 vs. 1.89 for red) and therefore has a narrower data spread with more values closer to the mean. The histogram displays the narrower spread with the high number of observations for the bins around the mean size. The red urchin sample has a standard deviation closer to 2 and displays a wider, or squattier distribution.
+
 
 
 
@@ -122,3 +138,6 @@ ggplot(data = purple_urchins_summary) +
   labs(x = "Year", y = "Count observed", title = "Purple urchins of Santa Barbara")
 ```
 
+
+
+These barplots are separated by the five site locations and they are an effective manner of showing the count of urchins observed at each year from 2008-2020. 
